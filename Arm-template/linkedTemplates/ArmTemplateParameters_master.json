@@ -1,0 +1,45 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "factoryName": {
+            "value": "Pranav-Blob-To-AzureTable"
+        },
+        "BlobStorageConnecton_connectionString": {
+            "value": ""
+        },
+        "BatchConnection_accessKey": {
+            "value": ""
+        },
+        "AzureTableStorageConnection_connectionString": {
+            "value": ""
+        },
+        "AzureSqlDatabase1_connectionString": {
+            "value": ""
+        },
+        "OEE_properties_typeProperties_fileName": {
+            "value": "@dataset().BlobFileName"
+        },
+        "OEE_properties_typeProperties_folderPath": {
+            "value": "@concat(dataset().BlobContainer,'/',dataset().BlobFilePath)"
+        },
+        "CI_properties_typeProperties_fileName": {
+            "value": "@dataset().BlobFileName"
+        },
+        "CI_properties_typeProperties_folderPath": {
+            "value": "@concat(dataset().BlobContainer,'/',dataset().BlobFilePath)"
+        },
+        "BatchConnection_properties_typeProperties_accountName": {
+            "value": "dappython"
+        },
+        "BatchConnection_properties_typeProperties_batchUri": {
+            "value": "https://dappython.eastus.batch.azure.com"
+        },
+        "containerUri": {
+            "value": ""
+        },
+        "containerSasToken": {
+            "value": ""
+        }
+    }
+}

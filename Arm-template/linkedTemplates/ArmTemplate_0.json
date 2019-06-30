@@ -1,0 +1,804 @@
+{
+    "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "factoryName": {
+            "type": "string",
+            "metadata": "Data Factory Name",
+            "defaultValue": "Pranav-Blob-To-AzureTable"
+        },
+        "BlobStorageConnecton_connectionString": {
+            "type": "secureString",
+            "metadata": "Secure string for 'connectionString' of 'BlobStorageConnecton'"
+        },
+        "AzureTableStorageConnection_connectionString": {
+            "type": "secureString",
+            "metadata": "Secure string for 'connectionString' of 'AzureTableStorageConnection'"
+        },
+        "AzureSqlDatabase1_connectionString": {
+            "type": "secureString",
+            "metadata": "Secure string for 'connectionString' of 'AzureSqlDatabase1'"
+        },
+        "BatchConnection_accessKey": {
+            "type": "secureString",
+            "metadata": "Secure string for 'accessKey' of 'BatchConnection'"
+        },
+        "OEE_properties_typeProperties_fileName": {
+            "type": "string",
+            "defaultValue": "@dataset().BlobFileName"
+        },
+        "OEE_properties_typeProperties_folderPath": {
+            "type": "string",
+            "defaultValue": "@concat(dataset().BlobContainer,'/',dataset().BlobFilePath)"
+        },
+        "CI_properties_typeProperties_fileName": {
+            "type": "string",
+            "defaultValue": "@dataset().BlobFileName"
+        },
+        "CI_properties_typeProperties_folderPath": {
+            "type": "string",
+            "defaultValue": "@concat(dataset().BlobContainer,'/',dataset().BlobFilePath)"
+        },
+        "BatchConnection_properties_typeProperties_accountName": {
+            "type": "string",
+            "defaultValue": "dappython"
+        },
+        "BatchConnection_properties_typeProperties_batchUri": {
+            "type": "string",
+            "defaultValue": "https://dappython.eastus.batch.azure.com"
+        }
+    },
+    "variables": {
+        "factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+    },
+    "resources": [
+        {
+            "name": "[concat(parameters('factoryName'), '/BlobStorageConnecton')]",
+            "type": "Microsoft.DataFactory/factories/linkedServices",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "annotations": [],
+                "type": "AzureBlobStorage",
+                "typeProperties": {
+                    "connectionString": "[parameters('BlobStorageConnecton_connectionString')]"
+                }
+            },
+            "dependsOn": []
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/AzureTableStorageConnection')]",
+            "type": "Microsoft.DataFactory/factories/linkedServices",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "annotations": [],
+                "type": "AzureTableStorage",
+                "typeProperties": {
+                    "connectionString": "[parameters('AzureTableStorageConnection_connectionString')]"
+                }
+            },
+            "dependsOn": []
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/AzureSqlDatabase1')]",
+            "type": "Microsoft.DataFactory/factories/linkedServices",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "annotations": [],
+                "type": "AzureSqlDatabase",
+                "typeProperties": {
+                    "connectionString": "[parameters('AzureSqlDatabase1_connectionString')]"
+                }
+            },
+            "dependsOn": []
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/OEE')]",
+            "type": "Microsoft.DataFactory/factories/datasets",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "linkedServiceName": {
+                    "referenceName": "BlobStorageConnecton",
+                    "type": "LinkedServiceReference"
+                },
+                "parameters": {
+                    "BlobContainer": {
+                        "type": "string",
+                        "defaultValue": "pranav"
+                    },
+                    "BlobFilePath": {
+                        "type": "string",
+                        "defaultValue": "OriginalFiles"
+                    },
+                    "BlobFileName": {
+                        "type": "string",
+                        "defaultValue": "OEE Test.xls"
+                    },
+                    "TextQualifier": {
+                        "type": "string",
+                        "defaultValue": "\""
+                    },
+                    "ColumnDelimiter": {
+                        "type": "string",
+                        "defaultValue": ","
+                    },
+                    "Encoding": {
+                        "type": "string",
+                        "defaultValue": "UTF-8"
+                    }
+                },
+                "annotations": [],
+                "type": "AzureBlob",
+                "typeProperties": {
+                    "fileName": {
+                        "value": "[parameters('OEE_properties_typeProperties_fileName')]",
+                        "type": "Expression"
+                    },
+                    "folderPath": {
+                        "value": "[parameters('OEE_properties_typeProperties_folderPath')]",
+                        "type": "Expression"
+                    }
+                }
+            },
+            "dependsOn": [
+                "[concat(variables('factoryId'), '/linkedServices/BlobStorageConnecton')]"
+            ]
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/CI')]",
+            "type": "Microsoft.DataFactory/factories/datasets",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "linkedServiceName": {
+                    "referenceName": "BlobStorageConnecton",
+                    "type": "LinkedServiceReference"
+                },
+                "parameters": {
+                    "BlobContainer": {
+                        "type": "string",
+                        "defaultValue": "pranav"
+                    },
+                    "BlobFilePath": {
+                        "type": "string",
+                        "defaultValue": "OriginalFiles"
+                    },
+                    "BlobFileName": {
+                        "type": "string",
+                        "defaultValue": "CI Test.xlsx"
+                    },
+                    "TextQualifier": {
+                        "type": "string",
+                        "defaultValue": "\""
+                    },
+                    "ColumnDelimiter": {
+                        "type": "string",
+                        "defaultValue": ","
+                    },
+                    "Encoding": {
+                        "type": "string",
+                        "defaultValue": "UTF-8"
+                    }
+                },
+                "annotations": [],
+                "type": "AzureBlob",
+                "typeProperties": {
+                    "fileName": {
+                        "value": "[parameters('CI_properties_typeProperties_fileName')]",
+                        "type": "Expression"
+                    },
+                    "folderPath": {
+                        "value": "[parameters('CI_properties_typeProperties_folderPath')]",
+                        "type": "Expression"
+                    }
+                }
+            },
+            "dependsOn": [
+                "[concat(variables('factoryId'), '/linkedServices/BlobStorageConnecton')]"
+            ]
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/CI_TSVData')]",
+            "type": "Microsoft.DataFactory/factories/datasets",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "linkedServiceName": {
+                    "referenceName": "BlobStorageConnecton",
+                    "type": "LinkedServiceReference"
+                },
+                "parameters": {
+                    "BlobContainer": {
+                        "type": "string",
+                        "defaultValue": "pranav"
+                    },
+                    "BlobFilePath": {
+                        "type": "string",
+                        "defaultValue": "ConvertedFiles"
+                    },
+                    "BlobFileName": {
+                        "type": "string",
+                        "defaultValue": "CI Test*.txt"
+                    },
+                    "TextQualifier": {
+                        "type": "string",
+                        "defaultValue": "\""
+                    },
+                    "Encoding": {
+                        "type": "string",
+                        "defaultValue": "UTF-8"
+                    }
+                },
+                "annotations": [],
+                "type": "DelimitedText",
+                "typeProperties": {
+                    "location": {
+                        "type": "AzureBlobStorageLocation",
+                        "fileName": {
+                            "value": "@dataset().BlobFileName",
+                            "type": "Expression"
+                        },
+                        "folderPath": {
+                            "value": "@dataset().BlobFilePath",
+                            "type": "Expression"
+                        },
+                        "container": {
+                            "value": "@dataset().BlobContainer",
+                            "type": "Expression"
+                        }
+                    },
+                    "columnDelimiter": "\t",
+                    "escapeChar": "\\",
+                    "firstRowAsHeader": true,
+                    "quoteChar": "\""
+                },
+                "schema": [
+                    {
+                        "name": "CINo.",
+                        "type": "String"
+                    },
+                    {
+                        "name": "Code",
+                        "type": "String"
+                    },
+                    {
+                        "name": "PQVC",
+                        "type": "String"
+                    },
+                    {
+                        "name": "ActionOwner",
+                        "type": "String"
+                    },
+                    {
+                        "name": "OwnerDivision",
+                        "type": "String"
+                    },
+                    {
+                        "name": "Originator",
+                        "type": "String"
+                    },
+                    {
+                        "name": "OriginatorDivision",
+                        "type": "String"
+                    },
+                    {
+                        "name": "CreateDate",
+                        "type": "String"
+                    },
+                    {
+                        "name": "Location",
+                        "type": "String"
+                    },
+                    {
+                        "name": "Idea",
+                        "type": "String"
+                    },
+                    {
+                        "name": "RootCause",
+                        "type": "String"
+                    },
+                    {
+                        "name": "Action",
+                        "type": "String"
+                    },
+                    {
+                        "name": "Status",
+                        "type": "String"
+                    },
+                    {
+                        "name": "TargetDate",
+                        "type": "String"
+                    },
+                    {
+                        "name": "CloseDate",
+                        "type": "String"
+                    },
+                    {
+                        "name": "Duration",
+                        "type": "String"
+                    },
+                    {
+                        "name": "Remark",
+                        "type": "String"
+                    }
+                ]
+            },
+            "dependsOn": [
+                "[concat(variables('factoryId'), '/linkedServices/BlobStorageConnecton')]"
+            ]
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/CITable')]",
+            "type": "Microsoft.DataFactory/factories/datasets",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "linkedServiceName": {
+                    "referenceName": "AzureTableStorageConnection",
+                    "type": "LinkedServiceReference"
+                },
+                "annotations": [],
+                "type": "AzureTable",
+                "schema": [],
+                "typeProperties": {
+                    "tableName": "CITable"
+                }
+            },
+            "dependsOn": [
+                "[concat(variables('factoryId'), '/linkedServices/AzureTableStorageConnection')]"
+            ]
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/BatchConnection')]",
+            "type": "Microsoft.DataFactory/factories/linkedServices",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "annotations": [],
+                "type": "AzureBatch",
+                "typeProperties": {
+                    "accountName": "[parameters('BatchConnection_properties_typeProperties_accountName')]",
+                    "accessKey": {
+                        "type": "SecureString",
+                        "value": "[parameters('BatchConnection_accessKey')]"
+                    },
+                    "batchUri": "[parameters('BatchConnection_properties_typeProperties_batchUri')]",
+                    "poolName": "UbuntuPoolNew",
+                    "linkedServiceName": {
+                        "referenceName": "BlobStorageConnecton",
+                        "type": "LinkedServiceReference"
+                    }
+                }
+            },
+            "dependsOn": [
+                "[concat(variables('factoryId'), '/linkedServices/BlobStorageConnecton')]"
+            ]
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/OEE_TSVData')]",
+            "type": "Microsoft.DataFactory/factories/datasets",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "linkedServiceName": {
+                    "referenceName": "BlobStorageConnecton",
+                    "type": "LinkedServiceReference"
+                },
+                "parameters": {
+                    "BlobContainer": {
+                        "type": "string",
+                        "defaultValue": "pranav"
+                    },
+                    "BlobFilePath": {
+                        "type": "string",
+                        "defaultValue": "ConvertedFiles"
+                    },
+                    "BlobFileName": {
+                        "type": "string",
+                        "defaultValue": "CI Test*.txt"
+                    },
+                    "TextQualifier": {
+                        "type": "string",
+                        "defaultValue": "\""
+                    },
+                    "Encoding": {
+                        "type": "string",
+                        "defaultValue": "UTF-8"
+                    }
+                },
+                "annotations": [],
+                "type": "DelimitedText",
+                "typeProperties": {
+                    "location": {
+                        "type": "AzureBlobStorageLocation",
+                        "fileName": {
+                            "value": "@dataset().BlobFileName",
+                            "type": "Expression"
+                        },
+                        "folderPath": {
+                            "value": "@dataset().BlobFilePath",
+                            "type": "Expression"
+                        },
+                        "container": {
+                            "value": "@dataset().BlobContainer",
+                            "type": "Expression"
+                        }
+                    },
+                    "columnDelimiter": "\t",
+                    "escapeChar": "\\",
+                    "firstRowAsHeader": true,
+                    "quoteChar": "\""
+                },
+                "schema": [
+                    {
+                        "name": "Date",
+                        "type": "String"
+                    },
+                    {
+                        "name": "Numberofworkorders(pieces)",
+                        "type": "String"
+                    },
+                    {
+                        "name": "Setmethodcycletime",
+                        "type": "String"
+                    },
+                    {
+                        "name": "Actualproductionquantity",
+                        "type": "String"
+                    },
+                    {
+                        "name": "Setmethodtime",
+                        "type": "String"
+                    },
+                    {
+                        "name": "Quantityofgoodspassed",
+                        "type": "String"
+                    },
+                    {
+                        "name": "Workstarttime",
+                        "type": "String"
+                    },
+                    {
+                        "name": "Endofwork",
+                        "type": "String"
+                    },
+                    {
+                        "name": "Actualclocktime",
+                        "type": "String"
+                    },
+                    {
+                        "name": "Actualoperationtime",
+                        "type": "String"
+                    },
+                    {
+                        "name": "Preparationtime",
+                        "type": "String"
+                    },
+                    {
+                        "name": "Qualityinspection",
+                        "type": "String"
+                    },
+                    {
+                        "name": "Machinefailureshutdown",
+                        "type": "String"
+                    },
+                    {
+                        "name": "Machineadjustment",
+                        "type": "String"
+                    },
+                    {
+                        "name": "Waitingtime",
+                        "type": "String"
+                    },
+                    {
+                        "name": "Operatordeparturetime",
+                        "type": "String"
+                    },
+                    {
+                        "name": "Toolreplacementtime",
+                        "type": "String"
+                    },
+                    {
+                        "name": "Startlosstime",
+                        "type": "String"
+                    },
+                    {
+                        "name": "Other",
+                        "type": "String"
+                    },
+                    {
+                        "name": "Totallosttime",
+                        "type": "String"
+                    },
+                    {
+                        "name": "Availability",
+                        "type": "String"
+                    },
+                    {
+                        "name": "Performance",
+                        "type": "String"
+                    },
+                    {
+                        "name": "Quality",
+                        "type": "String"
+                    },
+                    {
+                        "name": "Lossofquality",
+                        "type": "String"
+                    }
+                ]
+            },
+            "dependsOn": [
+                "[concat(variables('factoryId'), '/linkedServices/BlobStorageConnecton')]"
+            ]
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/OEETable')]",
+            "type": "Microsoft.DataFactory/factories/datasets",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "linkedServiceName": {
+                    "referenceName": "AzureTableStorageConnection",
+                    "type": "LinkedServiceReference"
+                },
+                "annotations": [],
+                "type": "AzureTable",
+                "schema": [],
+                "typeProperties": {
+                    "tableName": "OEETable"
+                }
+            },
+            "dependsOn": [
+                "[concat(variables('factoryId'), '/linkedServices/AzureTableStorageConnection')]"
+            ]
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/CAT')]",
+            "type": "Microsoft.DataFactory/factories/pipelines",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "activities": [
+                    {
+                        "name": "OEE",
+                        "type": "Custom",
+                        "dependsOn": [
+                            {
+                                "activity": "Copy CI Data",
+                                "dependencyConditions": [
+                                    "Completed"
+                                ]
+                            }
+                        ],
+                        "policy": {
+                            "timeout": "7.00:00:00",
+                            "retry": 0,
+                            "retryIntervalInSeconds": 30,
+                            "secureOutput": false,
+                            "secureInput": false
+                        },
+                        "userProperties": [],
+                        "typeProperties": {
+                            "command": "python3 blob_process_files_wrapper.py",
+                            "resourceLinkedService": {
+                                "referenceName": "BlobStorageConnecton",
+                                "type": "LinkedServiceReference"
+                            },
+                            "folderPath": "pranav/PythonCodeFiles_v2/wrappers",
+                            "extendedProperties": {
+                                "inputFileDelimiter": "\\t",
+                                "skipHeaderRow": "2",
+                                "BlobFileUploadPath": "ConvertedFiles/",
+                                "BlobArchivePath": "archiveFolder/",
+                                "sheetName": "Daily Data"
+                            },
+                            "referenceObjects": {
+                                "linkedServices": [
+                                    {
+                                        "referenceName": "BlobStorageConnecton",
+                                        "type": "LinkedServiceReference",
+                                        "parameters": {}
+                                    }
+                                ],
+                                "datasets": [
+                                    {
+                                        "referenceName": "OEE",
+                                        "type": "DatasetReference",
+                                        "parameters": {
+                                            "BlobContainer": "pranav",
+                                            "BlobFilePath": "OriginalFiles",
+                                            "BlobFileName": "OEE Test.xls"
+                                        }
+                                    }
+                                ]
+                            }
+                        },
+                        "linkedServiceName": {
+                            "referenceName": "BatchConnection",
+                            "type": "LinkedServiceReference"
+                        }
+                    },
+                    {
+                        "name": "CI",
+                        "type": "Custom",
+                        "dependsOn": [],
+                        "policy": {
+                            "timeout": "7.00:00:00",
+                            "retry": 0,
+                            "retryIntervalInSeconds": 30,
+                            "secureOutput": false,
+                            "secureInput": false
+                        },
+                        "userProperties": [],
+                        "typeProperties": {
+                            "command": "python3 blob_process_files_wrapper.py",
+                            "resourceLinkedService": {
+                                "referenceName": "BlobStorageConnecton",
+                                "type": "LinkedServiceReference"
+                            },
+                            "folderPath": "pranav/PythonCodeFiles_v2/wrappers",
+                            "extendedProperties": {
+                                "inputFileDelimiter": "\\t",
+                                "skipHeaderRow": "0",
+                                "BlobFileUploadPath": "ConvertedFiles/",
+                                "BlobArchivePath": "archiveFolder/",
+                                "sheetName": "Sheet1"
+                            },
+                            "referenceObjects": {
+                                "linkedServices": [
+                                    {
+                                        "referenceName": "BlobStorageConnecton",
+                                        "type": "LinkedServiceReference",
+                                        "parameters": {}
+                                    }
+                                ],
+                                "datasets": [
+                                    {
+                                        "referenceName": "CI",
+                                        "type": "DatasetReference",
+                                        "parameters": {
+                                            "BlobContainer": "pranav",
+                                            "BlobFilePath": "OriginalFiles",
+                                            "BlobFileName": "CI Test.xlsx",
+                                            "TextQualifier": "\"",
+                                            "ColumnDelimiter": ",",
+                                            "Encoding": "UTF-8"
+                                        }
+                                    }
+                                ]
+                            }
+                        },
+                        "linkedServiceName": {
+                            "referenceName": "BatchConnection",
+                            "type": "LinkedServiceReference"
+                        }
+                    },
+                    {
+                        "name": "Copy CI Data",
+                        "type": "Copy",
+                        "dependsOn": [
+                            {
+                                "activity": "CI",
+                                "dependencyConditions": [
+                                    "Succeeded"
+                                ]
+                            }
+                        ],
+                        "policy": {
+                            "timeout": "7.00:00:00",
+                            "retry": 0,
+                            "retryIntervalInSeconds": 30,
+                            "secureOutput": false,
+                            "secureInput": false
+                        },
+                        "userProperties": [],
+                        "typeProperties": {
+                            "source": {
+                                "type": "DelimitedTextSource",
+                                "storeSettings": {
+                                    "type": "AzureBlobStorageReadSetting",
+                                    "recursive": false,
+                                    "wildcardFileName": "CI Test*.txt",
+                                    "enablePartitionDiscovery": false
+                                },
+                                "formatSettings": {
+                                    "type": "DelimitedTextReadSetting"
+                                }
+                            },
+                            "sink": {
+                                "type": "AzureTableSink",
+                                "azureTableInsertType": "replace",
+                                "writeBatchSize": 10000
+                            },
+                            "enableStaging": false
+                        },
+                        "inputs": [
+                            {
+                                "referenceName": "CI_TSVData",
+                                "type": "DatasetReference",
+                                "parameters": {
+                                    "BlobContainer": "pranav",
+                                    "BlobFilePath": "ConvertedFiles",
+                                    "BlobFileName": "CI Test*.txt",
+                                    "TextQualifier": "\"",
+                                    "Encoding": "UTF-8"
+                                }
+                            }
+                        ],
+                        "outputs": [
+                            {
+                                "referenceName": "CITable",
+                                "type": "DatasetReference",
+                                "parameters": {}
+                            }
+                        ]
+                    },
+                    {
+                        "name": "Copy OEE Data",
+                        "type": "Copy",
+                        "dependsOn": [
+                            {
+                                "activity": "OEE",
+                                "dependencyConditions": [
+                                    "Succeeded"
+                                ]
+                            }
+                        ],
+                        "policy": {
+                            "timeout": "7.00:00:00",
+                            "retry": 0,
+                            "retryIntervalInSeconds": 30,
+                            "secureOutput": false,
+                            "secureInput": false
+                        },
+                        "userProperties": [],
+                        "typeProperties": {
+                            "source": {
+                                "type": "DelimitedTextSource",
+                                "storeSettings": {
+                                    "type": "AzureBlobStorageReadSetting",
+                                    "recursive": false,
+                                    "wildcardFileName": "OEE Test*.txt",
+                                    "enablePartitionDiscovery": false
+                                },
+                                "formatSettings": {
+                                    "type": "DelimitedTextReadSetting"
+                                }
+                            },
+                            "sink": {
+                                "type": "AzureTableSink",
+                                "azureTableInsertType": "replace",
+                                "writeBatchSize": 10000
+                            },
+                            "enableStaging": false
+                        },
+                        "inputs": [
+                            {
+                                "referenceName": "OEE_TSVData",
+                                "type": "DatasetReference",
+                                "parameters": {
+                                    "BlobContainer": "pranav",
+                                    "BlobFilePath": "ConvertedFiles",
+                                    "BlobFileName": "OEE Test*.txt",
+                                    "TextQualifier": "\"",
+                                    "Encoding": "UTF-8"
+                                }
+                            }
+                        ],
+                        "outputs": [
+                            {
+                                "referenceName": "OEETable",
+                                "type": "DatasetReference",
+                                "parameters": {}
+                            }
+                        ]
+                    }
+                ],
+                "annotations": []
+            },
+            "dependsOn": [
+                "[concat(variables('factoryId'), '/linkedServices/BlobStorageConnecton')]",
+                "[concat(variables('factoryId'), '/datasets/OEE')]",
+                "[concat(variables('factoryId'), '/linkedServices/BatchConnection')]",
+                "[concat(variables('factoryId'), '/datasets/CI')]",
+                "[concat(variables('factoryId'), '/datasets/CI_TSVData')]",
+                "[concat(variables('factoryId'), '/datasets/CITable')]",
+                "[concat(variables('factoryId'), '/datasets/OEE_TSVData')]",
+                "[concat(variables('factoryId'), '/datasets/OEETable')]"
+            ]
+        }
+    ]
+}

@@ -1,0 +1,8 @@
+/bin/sh -c "sudo apt-get update
+sudo apt-get -y install python3-pip
+python3 -m pip install --upgrade pip
+python3 -m pip install --upgrade pip
+python3 -m pip install xlrd ftputil azure-storage-blob zeep wget bs4 pytrends==4.4.0 xlsxwriter cryptography==2.6.1 pysftp boto3 pycryptodome email.Header
+echo '--------python 3 packages--------'
+python3 -m pip list
+"

@@ -1,0 +1,112 @@
+{
+    "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "factoryName": {
+            "type": "string",
+            "metadata": "Data Factory Name",
+            "defaultValue": "Pranav-Blob-To-AzureTable"
+        },
+        "BlobStorageConnecton_connectionString": {
+            "type": "secureString",
+            "metadata": "Secure string for 'connectionString' of 'BlobStorageConnecton'"
+        },
+        "BatchConnection_accessKey": {
+            "type": "secureString",
+            "metadata": "Secure string for 'accessKey' of 'BatchConnection'"
+        },
+        "AzureTableStorageConnection_connectionString": {
+            "type": "secureString",
+            "metadata": "Secure string for 'connectionString' of 'AzureTableStorageConnection'"
+        },
+        "AzureSqlDatabase1_connectionString": {
+            "type": "secureString",
+            "metadata": "Secure string for 'connectionString' of 'AzureSqlDatabase1'"
+        },
+        "OEE_properties_typeProperties_fileName": {
+            "type": "string",
+            "defaultValue": "@dataset().BlobFileName"
+        },
+        "OEE_properties_typeProperties_folderPath": {
+            "type": "string",
+            "defaultValue": "@concat(dataset().BlobContainer,'/',dataset().BlobFilePath)"
+        },
+        "CI_properties_typeProperties_fileName": {
+            "type": "string",
+            "defaultValue": "@dataset().BlobFileName"
+        },
+        "CI_properties_typeProperties_folderPath": {
+            "type": "string",
+            "defaultValue": "@concat(dataset().BlobContainer,'/',dataset().BlobFilePath)"
+        },
+        "BatchConnection_properties_typeProperties_accountName": {
+            "type": "string",
+            "defaultValue": "dappython"
+        },
+        "BatchConnection_properties_typeProperties_batchUri": {
+            "type": "string",
+            "defaultValue": "https://dappython.eastus.batch.azure.com"
+        },
+        "containerUri": {
+            "type": "string",
+            "metadata": "URI to storage account containing linked ARM templates"
+        },
+        "containerSasToken": {
+            "type": "string",
+            "metadata": "Sas Token to storage account containing linked ARM templates"
+        }
+    },
+    "variables": {
+        "factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+    },
+    "resources": [
+        {
+            "name": "ArmTemplate_0",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2018-02-01",
+            "properties": {
+                "mode": "incremental",
+                "templateLink": {
+                    "uri": "[concat(parameters('containerUri'), '/ArmTemplate_0.json', parameters('containerSasToken'))]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "factoryName": {
+                        "value": "[parameters('factoryName')]"
+                    },
+                    "BlobStorageConnecton_connectionString": {
+                        "value": "[parameters('BlobStorageConnecton_connectionString')]"
+                    },
+                    "AzureTableStorageConnection_connectionString": {
+                        "value": "[parameters('AzureTableStorageConnection_connectionString')]"
+                    },
+                    "AzureSqlDatabase1_connectionString": {
+                        "value": "[parameters('AzureSqlDatabase1_connectionString')]"
+                    },
+                    "BatchConnection_accessKey": {
+                        "value": "[parameters('BatchConnection_accessKey')]"
+                    },
+                    "OEE_properties_typeProperties_fileName": {
+                        "value": "[parameters('OEE_properties_typeProperties_fileName')]"
+                    },
+                    "OEE_properties_typeProperties_folderPath": {
+                        "value": "[parameters('OEE_properties_typeProperties_folderPath')]"
+                    },
+                    "CI_properties_typeProperties_fileName": {
+                        "value": "[parameters('CI_properties_typeProperties_fileName')]"
+                    },
+                    "CI_properties_typeProperties_folderPath": {
+                        "value": "[parameters('CI_properties_typeProperties_folderPath')]"
+                    },
+                    "BatchConnection_properties_typeProperties_accountName": {
+                        "value": "[parameters('BatchConnection_properties_typeProperties_accountName')]"
+                    },
+                    "BatchConnection_properties_typeProperties_batchUri": {
+                        "value": "[parameters('BatchConnection_properties_typeProperties_batchUri')]"
+                    }
+                }
+            },
+            "dependsOn": []
+        }
+    ]
+}
