@@ -1,0 +1,188 @@
+import os
+import sys
+import datetime
+import codecs
+import shutil
+import glob
+import csv
+from excel_to_csv_txt import csv_from_excel
+from chardet.universaldetector import UniversalDetector
+
+outputFileEncoding = 'utf-8'
+
+#Function to get the file extension
+def getFileExtension(filePath):
+    try:
+        fileName,fileExtension = os.path.splitext(filePath)
+        return fileName,fileExtension,'File extension extracted successfully','Success'
+    except Exception as e:
+        return None,None,'Error in extracting file extension '+str(e),'Failure'
+
+
+#Function to get the file encoding
+def getFileEncoding(filePath):
+    try:
+        if sys.version_info[0] < 3:
+            file = open(filePath)
+        else:
+            file = open(filePath,'rb')
+        detector = UniversalDetector()
+        for line in file.readlines():
+            detector.feed(line)
+            if detector.done: break
+        detector.close()
+        file.close()
+        fileEncoding = detector.result['encoding']
+        return fileEncoding, 'File encoding detected successfully', 'Success'
+    except Exception as e:
+        return None, 'Error in detecting file encoding : ' + str(e), 'Failure'
+
+
+#Function to process the files based on its type
+def process_files(sourceFilePath,filename,inputFileDelimiter,sheetName,skipHeaderRow,skipTrailingRow,ProcessedFilePath):
+    try:
+        #processed files will always be a tab delimited files
+        outputFileDelimiter ='\t'
+        #Create temp working folder to process the files
+        tempDirName = 'temp_'+str(datetime.datetime.now().date())
+        tempDirPath = os.path.join(sourceFilePath,tempDirName)
+        rawFiles = filename
+        convertedFiles = []
+        rawFilesTobeArchived = []
+        isFileCompressed = False
+        if not os.path.exists(tempDirPath):
+            os.mkdir(tempDirPath)
+
+        print('------------File processing started----------')
+
+        fileName,fileExtension,statusMsg,status = getFileExtension(filename)
+
+        #If file is .xlsx/.xls,copy it to temp working folder for further processing
+        if fileExtension.lower() in('.xlsx','.xls'):
+            #copy file to temp working folder
+            print('Moving xlsx file to working directory')
+            shutil.move(os.path.join(sourceFilePath,filename),os.path.join(tempDirPath,filename))
+            #Archive file if not compressed
+            if not isFileCompressed:
+                rawFilesTobeArchived.append(filename)
+
+        #If file is .csv/.txt,copy it to temp working folder for further processing
+        if fileExtension.lower() in ('.csv','.txt'):
+            # copy file to temp working folder
+            print('Moving csv file to working directory')
+            shutil.move(os.path.join(sourceFilePath, filename), os.path.join(tempDirPath, filename))
+
+        print('files in working folder')
+        print(os.listdir(tempDirPath))
+
+        #Process files in temp working folder
+        for tempFile in os.listdir(tempDirPath):
+            fileName, fileExtension, statusMsg, status = getFileExtension(tempFile)
+
+            #If file is .xlsx/.xls, convert it to .csv/.txt file based on outputFileDeliter
+            if fileExtension.lower() in ('.xlsx','.xls'):
+                #call excel to csv
+                convertedCsvList,msg, csvfromexcelstatus = csv_from_excel(tempDirPath,tempFile,sheetName, outputFileDelimiter,skipHeaderRow,skipTrailingRow)
+                if csvfromexcelstatus == 'Failure':
+                    raise Exception(msg)
+                elif csvfromexcelstatus == 'Success':
+                    print(msg)
+                    print('Excel to csv converted files')
+                    print(os.listdir(tempDirPath))
+                    #Rename converted file and move to sourceFilePath
+                    for convertedFileName in convertedCsvList:
+                        csvFileName,csv_file_ext,statusMsg,status = getFileExtension(convertedFileName)
+                        csvFileRename = csvFileName+csv_file_ext
+                        os.rename(os.path.join(tempDirPath,convertedFileName),os.path.join(tempDirPath,csvFileRename))
+                        convertedFilePath = os.path.join(tempDirPath,csvFileRename)
+                        convertedFiles.append(csvFileRename)
+                        shutil.move(convertedFilePath, ProcessedFilePath)
+
+            #If file is .csv/.txt, convert it into .csv/.txt based on outputFileDeliter
+            if fileExtension.lower() in ('.csv','.txt'):
+
+                    outputFileExtension = '.txt'
+                    #Rename converted output file
+                    outputFileName = fileName+datetime.datetime.now().strftime(
+                            '_%Y-%m-%d_%H-%M-%S-%f')+outputFileExtension
+                    outputFilePath = os.path.join(tempDirPath,outputFileName)
+                    inputFilePath = os.path.join(tempDirPath, tempFile)
+
+                    # check file encoding
+                    inputFileEncoding, getFileEncodingStatusMsg, getFileEncodingStatus = getFileEncoding(inputFilePath)
+                    if getFileEncodingStatus == 'Failure':
+                        raise Exception(getFileEncodingStatusMsg)
+                    if sys.version_info[0] < 3:
+                        csv_file = open(outputFilePath, 'wb')
+                    else:
+                        csv_file = open(outputFilePath, 'w', newline='', encoding=outputFileEncoding)
+                    wr = csv.writer(csv_file,quoting=csv.QUOTE_ALL, delimiter=outputFileDelimiter)
+                    with codecs.open(inputFilePath, 'r', inputFileEncoding,'ignore') as data_csv:
+                        if inputFileDelimiter!='':
+                            try:
+                                if sys.version_info[0] < 3:
+                                    data = csv.reader((x.replace('\0', '').encode(outputFileEncoding) for x in data_csv)
+                                                      , delimiter=str(inputFileDelimiter))
+                                else:
+                                    data = csv.reader((x.replace('\0', '').replace('\ufeff','') for x in data_csv), delimiter=str(inputFileDelimiter))
+                            except Exception as e:
+                                if '1-character string' in str(e):
+                                    if sys.version_info[0] < 3:
+                                        data = csv.reader((x.replace('\0', '').encode(outputFileEncoding) for x in data_csv)
+                                                          , delimiter='\t')
+                                    else:
+                                        data = csv.reader((x.replace('\0', '').replace('\ufeff','') for x in data_csv), delimiter='\t')
+                        data = list(data)
+                    # Check if header column name is empty, if so assign a name
+                    rowNum = 0
+                    for row in data[int(skipHeaderRow):len(list(data)) - int(skipTrailingRow)]:
+                        
+                        # Logic to rename if column name is empty
+                        colIndex = 0
+                        for colnum in range(0,len(row)):
+                            if rowNum ==0 and row[colnum]=="":
+                                row[colnum] = "Column" + str(colIndex)
+                                colIndex += 1
+                                
+                        # Logic to rename duplicate columns 
+                        # eg. Input - ['a', 'b', 'c', 'a', 'd', 'b', 'a', 'a_2']
+                        # Output - ['a', 'b', 'c', 'a_1', 'd', 'b_1', 'a_2', 'a_2']
+                        if rowNum == 0 and len(row) != len(list(dict.fromkeys(row))):
+                            # row = map(lambda x: x[1] + str(row[:x[0]].count(x[1]) + 1) if row.count(x[1]) > 1 else x[1], enumerate(row))
+                            newlist = []
+                            for i, v in enumerate(row):
+                                totalcount = row.count(v)
+                                count = row[:i].count(v)
+                                if count == 0:
+                                    newlist.append(v)
+                                else:
+                                    newlist.append(v + "_" + str(count) if totalcount > 1 else v)
+                            row = newlist
+
+                        rowNum +=1
+                        wr.writerow(row)
+
+                    csv_file.close()
+                    #Remove input file after conversion
+                    os.remove(inputFilePath)
+                    convertedFiles.append(outputFileName)
+                    shutil.move(os.path.join(tempDirPath,outputFileName),os.path.join(ProcessedFilePath,outputFileName))
+                    # Archive file if not compressed
+                    if not isFileCompressed:
+                        rawFilesTobeArchived.append(tempFile)
+
+        #Move converted files to sourceFilePath from temp working folder
+        for remainingFiles in glob.glob(os.path.join(tempDirPath, '*.*')):
+            shutil.move(remainingFiles, ProcessedFilePath)
+
+        #Delete  temp working folder after file processing is done
+        os.rmdir(tempDirPath)
+        processed_file_list = os.listdir(ProcessedFilePath)
+        return rawFiles,",".join(convertedFiles),",".join(rawFilesTobeArchived),'File processing complete!!','Success'
+    except Exception as e:
+
+        print(str(e))
+        return None,None,None,'Error in file processing : ' + str(e),'Failure'
+
+
+
