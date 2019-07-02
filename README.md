@@ -1,6 +1,6 @@
 # Caterpillar-Sprint-1
 
-- I have created Azure tables, Data factory, Batch account, storage account. Created pool with start task steps. 
+- I have created Azure tables, Data factory, Batch account and Azure Blob. Created pool with start task steps. 
 
   The source excel files are stored in blob. I have copied the modified and converted files in Azure Table.
   
