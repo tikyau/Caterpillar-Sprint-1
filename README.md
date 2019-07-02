@@ -7,7 +7,7 @@
   The data factory ARM template is also included in this repo
   
 
-- Azure Table does not support space in column name. Your excel files have space in column names. E.g. Owner Division. 
+- Azure Table does not support space in column name. Their excel files have space in column names. E.g. Owner Division. 
 
   We need to change the destination to Azure SQL DB or we need to assume that there will not be space in excel file.
 
